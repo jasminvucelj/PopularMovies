@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="options_labels">
+        <item>Most popular</item>
+        <item>Top rated</item>
+    </string-array>
+    <string-array name="options_values">
+        <item>popular</item>
+        <item>top_rated</item>
+    </string-array>
+</resources>
