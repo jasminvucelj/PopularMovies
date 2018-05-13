@@ -5,5 +5,9 @@
     <string name="movie_poster">Movie poster</string>
     <string name="out_of_10">/10</string>
     <string name="sort_by">Sort by:</string>
+    <string name="favorites_add">Add to favorites</string>
+    <string name="favorites_remove">Remove from favorites</string>
+    <string name="play_trailer">Play trailer</string>
+    <string name="reviews">Reviews</string>
     <string name="TMDB_API_KEY"></string>
 </resources>

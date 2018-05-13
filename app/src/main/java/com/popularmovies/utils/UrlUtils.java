@@ -8,6 +8,9 @@ import java.net.URL;
 
 public class UrlUtils {
 
+    public static final String trailersPath = "videos";
+    public static final String reviewsPath = "reviews";
+
     /**
      * Constructs a URL for a movie image of a given size from a given relative path.
      * @param relativePath the path of the image, to be appended to the base URL.
@@ -45,6 +48,49 @@ public class UrlUtils {
 
         return UriToUrl(builtUri);
     }
+
+
+    /**
+     * Constructs a URL that requests either a list of trailers or reviews for a given
+     * movie, with a given API key.
+     * @param movieId the ID of the movie for trailers/reviews of which the URL is to request.
+     * @param apiKey the API key required for a valid request.
+     * @param endpoint the desired endpoint (trailers or reviews)
+     * @return the complete URL for the required request.
+     */
+    public static URL buildTrailersOrReviewsUrl(String movieId, String apiKey, String endpoint) {
+        final String moviesBaseUrl = "http://api.themoviedb.org/3";
+        final String moviesPath = "movie";
+        final String PARAM_API_KEY = "api_key";
+
+        Uri builtUri = Uri.parse(moviesBaseUrl).buildUpon()
+                .appendPath(moviesPath)
+                .appendPath(movieId)
+                .appendPath(endpoint)
+                .appendQueryParameter(PARAM_API_KEY, apiKey)
+                .build();
+
+        return UriToUrl(builtUri);
+    }
+
+
+	/**
+	 * Constructs a YouTube video URL of a trailer from the ID of that trailer.
+	 * @param videoId the ID of the requested video.
+	 * @return the complete YouTube URL of the requested video.
+	 */
+    public static URL buildYoutubeVideoURL(String videoId) {
+    	final String videoBaseUrl = "https://www.youtube.com";
+    	final String watchPath = "watch";
+    	final String PARAM_VIDEO = "v";
+
+		Uri builtUri = Uri.parse(videoBaseUrl).buildUpon()
+				.appendPath(watchPath)
+				.appendQueryParameter(PARAM_VIDEO, videoId)
+				.build();
+
+		return UriToUrl(builtUri);
+	}
 
 
     /**

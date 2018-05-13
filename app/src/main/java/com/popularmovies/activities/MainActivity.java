@@ -18,6 +18,7 @@ import android.widget.Spinner;
 import com.popularmovies.adapters.MoviesAdapter;
 import com.popularmovies.R;
 import com.popularmovies.classes.Movie;
+import com.popularmovies.database.FavoritesDBHelper;
 import com.popularmovies.utils.JsonUtils;
 import com.popularmovies.utils.NetworkUtils;
 import com.popularmovies.utils.UrlUtils;
@@ -36,7 +37,7 @@ public class MainActivity extends Activity implements MoviesAdapter.MoviesAdapte
     private static final int SPAN_COUNT=4;
 
     private String sortBy;
-    private List<Movie> mList = null;
+    private List<Movie> movieList = null;
 
     private SharedPreferences sharedPrefs;
 
@@ -44,6 +45,8 @@ public class MainActivity extends Activity implements MoviesAdapter.MoviesAdapte
     private ProgressBar progressBar;
     private RecyclerView rvMovies;
     private MoviesAdapter moviesAdapter;
+
+    public FavoritesDBHelper dbHelper;
 
 
     @Override
@@ -54,7 +57,6 @@ public class MainActivity extends Activity implements MoviesAdapter.MoviesAdapte
         spinnerSortBy = findViewById(R.id.spinnerSortBy);
         progressBar = findViewById(R.id.progressBar);
         rvMovies = findViewById(R.id.rvMovies);
-
 
         // setup spinner - change the movie display on selection change
 
@@ -88,6 +90,8 @@ public class MainActivity extends Activity implements MoviesAdapter.MoviesAdapte
             editor.apply();
         }
 
+        // init db helper
+        dbHelper = new FavoritesDBHelper(this);
 
         // setup recycler view & adapter
 
@@ -100,7 +104,7 @@ public class MainActivity extends Activity implements MoviesAdapter.MoviesAdapte
                 false);
         rvMovies.setLayoutManager(layoutManager);
 
-        if (mList == null) {
+        if (movieList == null) {
             queryMovies();
         }
     }
@@ -114,12 +118,18 @@ public class MainActivity extends Activity implements MoviesAdapter.MoviesAdapte
         progressBar.setVisibility(View.VISIBLE);
         rvMovies.setVisibility(View.GONE);
 
-        URL moviesURL = UrlUtils.buildMoviesRequestUrl(
-                sortBy,
-                getString(R.string.TMDB_API_KEY)
-        );
+        if(sortBy.equals("favorites")) {
+            List<Movie> tempMovieList = dbHelper.getAllMovies();
+            setupRecyclerView(tempMovieList);
+        }
+        else {
+            URL moviesURL = UrlUtils.buildMoviesRequestUrl(
+                    sortBy,
+                    getString(R.string.TMDB_API_KEY)
+            );
 
-        new movieQueryTask().execute(moviesURL);
+            new movieQueryTask().execute(moviesURL);
+        }
     }
 
 
@@ -150,7 +160,7 @@ public class MainActivity extends Activity implements MoviesAdapter.MoviesAdapte
             List<Movie> moviesList = null;
 
             try {
-                while (!isOnline()) {}
+                while(!isOnline()) {}
                 String response = NetworkUtils.getResponseFromHttpUrl(moviesURL);
                 moviesList = JsonUtils.parseMovieJsonArray(response);
             } catch (IOException e) {
@@ -178,8 +188,8 @@ public class MainActivity extends Activity implements MoviesAdapter.MoviesAdapte
      */
     private void setupRecyclerView(List<Movie> moviesList) {
         if (moviesList != null && !moviesList.isEmpty()) {
-            mList = moviesList;
-            moviesAdapter = new MoviesAdapter(mList, MainActivity.this);
+            movieList = moviesList;
+            moviesAdapter = new MoviesAdapter(movieList, MainActivity.this);
             rvMovies.setAdapter(moviesAdapter);
             rvMovies.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.GONE);
@@ -187,10 +197,17 @@ public class MainActivity extends Activity implements MoviesAdapter.MoviesAdapte
     }
 
 
-    @Override
+	@Override
+	protected void onResume() {
+		super.onResume();
+		queryMovies();
+	}
+
+
+	@Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList("movies", (ArrayList<Movie>) mList);
+        outState.putParcelableArrayList("movies", (ArrayList<Movie>) movieList);
 
         sharedPrefs = getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPrefs.edit();
@@ -203,14 +220,14 @@ public class MainActivity extends Activity implements MoviesAdapter.MoviesAdapte
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
 
-        mList = savedInstanceState.getParcelableArrayList("movies");
+        movieList = savedInstanceState.getParcelableArrayList("movies");
 
         sharedPrefs = getPreferences(Context.MODE_PRIVATE);
         int position = sharedPrefs.getInt("sortby", 0);
         spinnerSortBy.setSelection(position);
         sortBy = getResources().getStringArray(R.array.options_values)[position];
 
-        setupRecyclerView(mList);
+        setupRecyclerView(movieList);
     }
 
 

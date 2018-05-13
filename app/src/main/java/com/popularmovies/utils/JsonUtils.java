@@ -1,6 +1,7 @@
 package com.popularmovies.utils;
 
 import com.popularmovies.classes.Movie;
+import com.popularmovies.classes.Review;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -17,6 +18,7 @@ public class JsonUtils {
 
     /**
      * Parses a JSON string containing a single movie.
+     *
      * @param in string in JSON format, containing a single movie.
      * @return a single Movie object.
      */
@@ -24,6 +26,7 @@ public class JsonUtils {
         try {
             JSONObject json = new JSONObject(in);
 
+            int id = json.getInt("id");
             String title = json.getString("original_title");
             String imageRelativePath = json.getString("poster_path");
             URL imageUrl = UrlUtils.buildImageUrl(imageRelativePath, "w185");
@@ -39,8 +42,8 @@ public class JsonUtils {
                 e.printStackTrace();
             }
 
-            return new Movie(title, imageUrl, synopsis, userRating, releaseDate);
-        }  catch (JSONException e) {
+            return new Movie(id, title, imageUrl, synopsis, userRating, releaseDate);
+        } catch (JSONException e) {
             return null;
         }
     }
@@ -48,6 +51,7 @@ public class JsonUtils {
 
     /**
      * Parses a JSON string containing a list of movies.
+     *
      * @param in string in JSON format, containing a list of movies.
      * @return a list of Movie objects.
      */
@@ -66,8 +70,62 @@ public class JsonUtils {
 
             return movieList;
 
-        }  catch (JSONException e) {
+        } catch (JSONException e) {
             return null;
         }
     }
+
+    /**
+     * Parses a JSON string containing a list of movie videos (trailers).
+     * @param in string in JSON format, containing a list of videos
+     * @return a list of video ID's to be used in a YouTube URL.
+     */
+    public static List<String> parseVideoIdJsonArray(String in) {
+        List<String> videoIdList = new ArrayList<>();
+
+        try {
+            JSONObject json = new JSONObject(in);
+            JSONArray results = json.getJSONArray("results");
+
+            for (int i = 0; i < results.length(); i++) {
+                JSONObject videoJSON = results.getJSONObject(i);
+                String videoId = videoJSON.getString("key");
+                videoIdList.add(videoId);
+            }
+
+            return videoIdList;
+
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
+
+    /**
+     * Parses a JSON string containing a list of movie reviews.
+     * @param in string in JSON format, containing a list of reviews.
+     * @return a list of Review objects.
+     */
+    public static List<Review> parseReviewJsonArray(String in) {
+        List<Review> reviewList = new ArrayList<>();
+
+        try {
+            JSONObject json = new JSONObject(in);
+            JSONArray results = json.getJSONArray("results");
+
+            for (int i = 0; i < results.length(); i++) {
+                JSONObject reviewJSON = results.getJSONObject(i);
+                String author = reviewJSON.getString("author");
+                String content = reviewJSON.getString("content");
+                Review review = new Review(author, content);
+                reviewList.add(review);
+            }
+
+            return reviewList;
+
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
 }
